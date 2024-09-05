@@ -1,49 +1,37 @@
-name: Sync
+name: Convert Adblock Rules
 
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch:  # 允许手动触发 Action
   schedule:
-    - cron: '*/5 * * * *' # 每5分钟执行一次
-
-env:
-  TZ: Asia/Shanghai
+    - cron: '0 0 * * *'  # 每天定时触发 Action
 
 jobs:
-  build:
+  convert-rules:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
 
-      - name: Install dependencies
-        run: pip install requests
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
 
-      - name: Run sync script
-        run: python sync.py
+    - name: Convert Adblock Rules
+      run: |
+        python convert_rules.py
 
-      - name: Commit changes
-        run: |
-          git config --local user.email "123@qq.com"
-          git config --local user.name "abc"
-          git diff
-          git status
-          if git diff-index --quiet HEAD --; then
-            echo "No changes to commit"
-          else
-            git commit -am "Sync changes"
-            - name: Push changes
-              uses: ad-m/github-push-action@master
-              with:
-                github_token: ${{ secrets.GITHUB_TOKEN }}
-          fi
-
-      - name: Delete Workflow Runs
-        uses: GitRML/delete-workflow-runs@main
-        with:
-          retain_days: 30
-          keep_minimum_runs: 10
+    - name: Commit and push changes
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add converted_rules.txt
+        git commit -m "Update converted adblock rules"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
