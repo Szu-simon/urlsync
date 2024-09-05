@@ -30,7 +30,7 @@ jobs:
     - name: Commit and push changes
       run: |
         git config --global user.name 'Szu-simon'
-        git config --global user.email '617597070@qq.com
+        git config --global user.email '617597070@qq.com'
         git add converted_rules.txt
         git commit -m "Update converted adblock rules"
         git push
