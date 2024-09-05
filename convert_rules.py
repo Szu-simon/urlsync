@@ -1,4 +1,5 @@
 import requests
+import os
 
 # 定义原始链接
 url = "https://raw.githubusercontent.com/217heidai/adblockfilters/main/rules/adblockdns.txt"
@@ -17,8 +18,11 @@ for rule in rules:
         converted_rule = f"- DOMAIN-SUFFIX,{domain},🆎 AdBlock"
         converted_rules.append(converted_rule)
 
+# 输出文件路径 - 仓库的根目录
+output_file_path = os.path.join(os.getcwd(), 'converted_rules.txt')
+
 # 将转换后的规则写入文件
-with open('converted_rules.txt', 'w') as f:
+with open(output_file_path, 'w') as f:
     f.write("\n".join(converted_rules))
 
-print("Rules converted successfully!")
+print(f"Rules converted successfully! Output written to {output_file_path}")
