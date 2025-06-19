@@ -15,7 +15,7 @@ jobs:
       id: fetch-subscription
       run: |
         # 替换为你的实际订阅链接
-        SUBSCRIPTION_URL="https://example.com/path/to/your/subscription.txt"
+        SUBSCRIPTION_URL="https://raw.githubusercontent.com/217heidai/adblockfilters/main/rules/adblockdns.txt"
         curl -s "$SUBSCRIPTION_URL" > raw-domains.txt
         echo "Fetched $(wc -l < raw-domains.txt) domains"
 
