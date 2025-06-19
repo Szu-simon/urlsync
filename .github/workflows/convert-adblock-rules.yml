@@ -19,32 +19,31 @@ jobs:
         curl -s "$SUBSCRIPTION_URL" > raw-domains.txt
         echo "Fetched $(wc -l < raw-domains.txt) lines"
 
-    - name: Convert domain format
+    - name: Convert to TXT format with payload header
       run: |
-        # 处理原始文件，转换为新格式
-        awk '{
-          if (/^!/) {
-            # 将!开头的行转换为#开头的注释行，保留原内容
-            sub(/^!/, "#", $0);
-            print $0;
-          }
-          else if (/^\|\|/) {
-            # 只处理以||开头的规则行
-            # 移除前缀||和后缀^
-            gsub(/^\|\||\^$/, "", $0);
-            # 移除可能的{和}
-            gsub(/[{}]/, "", $0);
-            # 打印转换后的格式
-            print "DOMAIN-SUFFIX," $0 ",🆎 AdBlock";
-          }
-          else if (!/^$/ && !/^#/) {
-            # 其他非空非注释行原样保留
-            print $0;
-          }
-        }' raw-domains.txt > converted-domains.txt
+        # 处理注释信息
+        awk '/^!/ {
+          sub(/^!/, "#", $0);
+          print $0;
+        }' raw-domains.txt > comments.txt
         
-        echo "Converted $(grep -c "^DOMAIN-SUFFIX" converted-domains.txt) domains"
-        echo "Preserved $(grep -c "^#" converted-domains.txt) comments"
+        # 处理域名规则
+        awk '/^\|\|/ {
+          gsub(/^\|\||\^$/, "", $0);
+          gsub(/[{}]/, "", $0);
+          print "+." $0;
+        }' raw-domains.txt > domains.txt
+        
+        # 合并文件：注释 + payload标题 + 域名列表
+        cat comments.txt > converted-domains.txt
+        echo "payload:" >> converted-domains.txt
+        cat domains.txt >> converted-domains.txt
+        
+        # 清理临时文件
+        rm comments.txt domains.txt
+        
+        echo "Converted $(wc -l < domains.txt) domains"
+        echo "Preserved $(wc -l < comments.txt) comments"
 
     - name: Commit and push changes
       run: |
