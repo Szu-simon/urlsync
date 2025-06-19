@@ -17,21 +17,30 @@ jobs:
         # 替换为你的实际订阅链接
         SUBSCRIPTION_URL="https://raw.githubusercontent.com/217heidai/adblockfilters/main/rules/adblockdns.txt"
         curl -s "$SUBSCRIPTION_URL" > raw-domains.txt
-        echo "Fetched $(wc -l < raw-domains.txt) domains"
+        echo "Fetched $(wc -l < raw-domains.txt) lines"
 
     - name: Convert domain format
       run: |
         # 处理原始文件，转换为新格式
-        awk '!/^$/ && !/^#/ {
-          # 移除可能的前缀如||和后缀如^
-          gsub(/^\|\||\^$/, "", $0);
-          # 移除可能的{和}
-          gsub(/[{}]/, "", $0);
-          # 打印转换后的格式
-          print "DOMAIN-SUFFIX," $0 ",🆎 AdBlock"
+        awk '{
+          if (/^!/) {
+            # 将!开头的行转换为#开头的注释行
+            sub(/^!/, "#", $0);
+            print $0;
+          }
+          else if (!/^$/ && !/^#/) {
+            # 处理普通规则行
+            # 移除可能的前缀如||和后缀如^
+            gsub(/^\|\||\^$/, "", $0);
+            # 移除可能的{和}
+            gsub(/[{}]/, "", $0);
+            # 打印转换后的格式
+            print "DOMAIN-SUFFIX," $0 ",🆎 AdBlock";
+          }
         }' raw-domains.txt > converted-domains.txt
         
-        echo "Converted $(wc -l < converted-domains.txt) domains"
+        echo "Converted $(grep -c "^DOMAIN-SUFFIX" converted-domains.txt) domains"
+        echo "Preserved $(grep -c "^#" converted-domains.txt) comments"
 
     - name: Commit and push changes
       run: |
