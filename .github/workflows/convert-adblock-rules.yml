@@ -19,36 +19,36 @@ jobs:
         curl -s "$SUBSCRIPTION_URL" > raw-domains.txt
         echo "Fetched $(wc -l < raw-domains.txt) lines"
 
-    - name: Convert to TXT format with payload header
+    - name: Convert to YAML format
       run: |
-        # 处理注释信息
+        # 创建YAML文件头
+        echo "payload:" > converted-domains.yaml
+        
+        # 处理原始文件，转换为YAML格式
+        awk '/^\|\|/ {
+          # 移除前缀||和后缀^
+          gsub(/^\|\||\^$/, "", $0);
+          # 移除可能的{和}
+          gsub(/[{}]/, "", $0);
+          # 格式化YAML条目
+          print "  - \"+." $0 "\""
+        }' raw-domains.txt >> converted-domains.yaml
+        
+        # 添加注释信息到YAML文件开头
         awk '/^!/ {
+          # 将!开头的行转换为#开头的注释行
           sub(/^!/, "#", $0);
           print $0;
-        }' raw-domains.txt > comments.txt
+        }' raw-domains.txt | sed '1i# 原始订阅信息' > temp-comments.txt
+        sed -i '1r temp-comments.txt' converted-domains.yaml
+        rm temp-comments.txt
         
-        # 处理域名规则
-        awk '/^\|\|/ {
-          gsub(/^\|\||\^$/, "", $0);
-          gsub(/[{}]/, "", $0);
-          print "+." $0;
-        }' raw-domains.txt > domains.txt
-        
-        # 合并文件：注释 + payload标题 + 域名列表
-        cat comments.txt > converted-domains.txt
-        echo "payload:" >> converted-domains.txt
-        cat domains.txt >> converted-domains.txt
-        
-        # 清理临时文件
-        rm comments.txt domains.txt
-        
-        echo "Converted $(wc -l < domains.txt) domains"
-        echo "Preserved $(wc -l < comments.txt) comments"
+        echo "Converted $(grep -c "^  - \"+\." converted-domains.yaml) domains"
 
     - name: Commit and push changes
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
-        git add converted-domains.txt
+        git add converted-domains.yaml
         git diff --quiet && git diff --staged --quiet || git commit -m "Auto-update converted domains [$(date +'%Y-%m-%d')]"
         git push
