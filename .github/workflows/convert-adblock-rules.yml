@@ -10,7 +10,6 @@ jobs:
     steps:
     - name: Checkout repository
       uses: ./path/to/local/checkout-action # 使用本地checkout action
-      
     - name: Fetch raw subscription
       id: fetch-subscription
       run: |
