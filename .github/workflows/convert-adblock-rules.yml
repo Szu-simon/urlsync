@@ -9,8 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
-
+      uses: ./path/to/local/checkout-action # 使用本地checkout action
     - name: Fetch raw subscription
       id: fetch-subscription
       run: |
