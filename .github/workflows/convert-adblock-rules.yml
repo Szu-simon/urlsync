@@ -9,7 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
-      uses: ./path/to/local/checkout-action # 使用本地checkout action
+      uses: actions/checkout@v4
+
     - name: Fetch raw subscription
       id: fetch-subscription
       run: |
@@ -21,7 +22,7 @@ jobs:
     - name: Convert domain format
       run: |
         # 处理原始文件，转换为新格式
-        awk '!/^$/ && !/^#/ && !/^@@\|\|/ {  # 跳过空行、注释行和@@||开头的例外规则
+        awk '!/^$/ && !/^#/ {
           # 移除可能的前缀如||和后缀如^
           gsub(/^\|\||\^$/, "", $0);
           # 移除可能的{和}
@@ -31,7 +32,6 @@ jobs:
         }' raw-domains.txt > converted-domains.txt
         
         echo "Converted $(wc -l < converted-domains.txt) domains"
-        echo "Removed $(grep -c "^@@\|\|" raw-domains.txt) exception rules"
 
     - name: Commit and push changes
       run: |
